@@ -1,6 +1,6 @@
-# Painel de Indicadores AME Praia Grande
+# Painel de Indicadores
 
-Aplicação web para exibição e gerenciamento de indicadores do AME Praia Grande integrados ao Power BI.
+Aplicação web para exibição e gerenciamento de indicadores integrados ao Power BI.
 
 ## 🚀 Tecnologias Utilizadas
 
