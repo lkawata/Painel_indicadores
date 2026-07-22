@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Indicadores - AME Praia Grande</title>
+    <!-- Google Fonts: Inter for clean, modern typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for modern dashboard icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <!-- SDK do Supabase JS v2 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Script do Aplicação -->
+    <script src="app.js"></script>
+</head>
+
+<body>
+
+    <!-- Corporate Header -->
+    <header class="corp-header">
+        <div class="header-container">
+            <div class="header-logo-title">
+                <img src="logo-ame.png.png" alt="Logo AME Praia Grande" class="header-logo-img">
+                <h1>PAINEL DE INDICADORES AME PRAIA GRANDE</h1>
+            </div>
+            <a href="login.html" class="btn-admin" id="btn-admin-redirect">
+                <i class="fa-solid fa-user-shield"></i>
+                <span>Área do Admin</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <div class="welcome-section">
+            <h2>Desempenho Ambulatorial</h2>
+            <p>Acompanhe a eficiência e qualidade dos nossos serviços.</p>
+        </div>
+
+        <!-- Filter Bar: Setor / Comissão -->
+        <div class="filter-bar" id="filter-bar">
+            <span class="filter-label">Setor / Comissão</span>
+            <div class="filter-scroll-wrapper">
+                <button class="filter-scroll-btn filter-scroll-left" id="filter-scroll-left"
+                    aria-label="Rolar para a esquerda">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <div class="filter-pills" id="filter-pills">
+                    <!-- Pills gerados dinamicamente pelo app.js -->
+                </div>
+                <button class="filter-scroll-btn filter-scroll-right" id="filter-scroll-right"
+                    aria-label="Rolar para a direita">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Grid Container for Indicators -->
+        <!-- Conteúdo renderizado dinamicamente pelo app.js via Supabase -->
+        <div class="grid-indicadores" id="grid-indicadores"></div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <p>&copy; 2026 AME Praia Grande. Todos os direitos reservados. Gestão de Saúde e Indicadores de Qualidade.</p>
+    </footer>
+
+</body>
+
+</html>

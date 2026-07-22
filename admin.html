@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin - Gerenciamento de Indicadores</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Dashboard Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <!-- SDK do Supabase JS v2 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Script do Aplicação -->
+    <script src="app.js"></script>
+</head>
+
+<body class="admin-body" style="display: none;">
+
+    <!-- Corporate Header -->
+    <header class="corp-header">
+        <div class="header-container">
+            <div class="header-logo-title">
+                <img src="logo-ame.png.png" alt="Logo AME Praia Grande" class="header-logo-img">
+                <h1>Gerenciamento de Indicadores</h1>
+            </div>
+            <button class="btn-admin" id="btn-logout">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Sair</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Admin Container -->
+    <main class="main-content">
+        <div class="admin-grid-layout">
+
+            <!-- Left Column: Form Area -->
+            <section class="admin-section-form">
+                <div class="admin-card">
+                    <div class="card-header-admin">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                        <h2>Formulário de Indicador</h2>
+                    </div>
+
+                    <form id="form-indicador" onsubmit="event.preventDefault();" class="admin-form">
+                        <!-- Input hidden to manage creation or edit modes -->
+                        <input type="hidden" id="indicador-id" value="">
+
+                        <div class="form-group-admin">
+                            <label for="titulo-indicador">Título do Indicador</label>
+                            <input type="text" id="titulo-indicador" placeholder="Ex: Satisfação do Paciente (NPS)"
+                                required>
+                        </div>
+
+                        <div class="form-group-admin">
+                            <label for="tag-indicador">Setor</label>
+                            <input type="text" id="tag-indicador" placeholder="Ex: Qualidade, Agendamento, Recepção...">
+                        </div>
+
+                        <div class="form-group-admin">
+                            <label for="descricao-detalhada">Descrição Detalhada</label>
+                            <textarea id="descricao-detalhada" rows="4"
+                                placeholder="Escreva uma descrição clara e objetiva para o overlay do card..."
+                                required></textarea>
+                        </div>
+
+                        <div class="form-group-admin">
+                            <label for="link-powerbi">Link do Power BI</label>
+                            <input type="url" id="link-powerbi" placeholder="https://app.powerbi.com/view?r=..."
+                                required>
+                        </div>
+
+                        <div class="form-group-admin">
+                            <label for="upload-imagem">Imagem de Fundo</label>
+                            <div class="file-upload-wrapper">
+                                <label class="file-upload-label" for="upload-imagem">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    <span>Escolher arquivo de imagem...</span>
+                                </label>
+                                <input type="file" id="upload-imagem" accept="image/*" class="file-upload-input">
+                            </div>
+                        </div>
+
+                        <div class="form-actions-admin">
+                            <button type="submit" id="btn-salvar" class="btn-primary-admin">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                                <span>Salvar Indicador</span>
+                            </button>
+
+                            <button type="button" id="btn-cancelar" class="btn-secondary-admin" style="display: none;">
+                                <i class="fa-solid fa-xmark"></i>
+                                <span>Cancelar Edição</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Right Column: Registered Indicators List -->
+            <section class="admin-section-list">
+                <div class="admin-card">
+                    <div class="card-header-admin">
+                        <i class="fa-solid fa-list-check"></i>
+                        <h2>Indicadores Cadastrados</h2>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Miniatura</th>
+                                    <th>Título</th>
+                                    <th class="actions-header">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lista-indicadores">
+                                <!-- Conteúdo renderizado dinamicamente pelo app.js via Supabase -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <p>&copy; 2026 AME Praia Grande. Painel de Controle Administrativo.</p>
+    </footer>
+
+</body>
+
+</html>

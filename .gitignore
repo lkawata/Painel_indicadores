@@ -1,0 +1,42 @@
+# Arquivos de Ambiente / Segredos locais
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs do Node / Pacotes
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Dependências
+node_modules/
+jspm_packages/
+
+# Builds / Pastas de Distribuição
+dist/
+build/
+out/
+.next/
+
+# IDEs / Editores
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# Documentação interna de Backup e arquivos exportados
+ROTINA_DE_BACKUP.txt
+PROJECT_MAP.md
+backup_indicadores_*.csv
+*.csv
+
