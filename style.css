@@ -884,29 +884,84 @@ body {
     }
 }
 
+@media (max-width: 768px) {
+    /* UX para touch screens: overlay sempre visível para ler descrição e tocar no link */
+    .card-overlay {
+        opacity: 1;
+        background-color: rgba(15, 23, 42, 0.9);
+    }
+    
+    .card-indicador:hover .card-image-container img {
+        transform: scale(1.02);
+    }
+}
+
 @media (max-width: 640px) {
     .header-container {
         flex-direction: column;
+        align-items: center;
         text-align: center;
         padding: 1.25rem 1rem;
+        gap: 1rem;
+    }
+
+    .header-logo-title {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .header-logo-img {
+        margin-right: 0;
+        height: 38px;
     }
 
     .corp-header h1 {
-        font-size: 1.1rem;
+        font-size: 1rem;
+        text-align: center;
+    }
+
+    .header-user-actions {
+        justify-content: center;
+        width: 100%;
     }
 
     .main-content {
-        padding: 2rem 1.25rem;
+        padding: 1.5rem 1rem;
+    }
+
+    .welcome-section {
+        text-align: center;
+        margin-bottom: 1.5rem;
     }
 
     .welcome-section h2 {
-        font-size: 1.4rem;
+        font-size: 1.35rem;
     }
 
-    /* Admin specific responsive styles */
+    .welcome-section p {
+        font-size: 0.9rem;
+        margin: 0 auto;
+    }
+
+    /* Abas de administração responsivas */
+    .admin-tabs {
+        flex-direction: row;
+        width: 100%;
+    }
+
+    .admin-tab-btn {
+        flex: 1;
+        justify-content: center;
+        padding: 0.6rem 0.75rem;
+        font-size: 0.85rem;
+        gap: 0.4rem;
+    }
+
+    /* Ajustes na tabela administrativa no mobile */
     .admin-table th,
     .admin-table td {
-        padding: 0.75rem 1rem;
+        padding: 0.6rem 0.75rem;
+        font-size: 0.8rem;
     }
 
     .btn-action-edit span,
@@ -916,7 +971,31 @@ body {
 
     .btn-action-edit,
     .btn-action-delete {
-        padding: 0.4rem 0.6rem;
+        padding: 0.4rem 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .grid-indicadores {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+
+    .login-card {
+        padding: 1.75rem 1.25rem;
+    }
+
+    .login-subtitle {
+        margin-bottom: 1.25rem;
+    }
+
+    .form-actions-admin {
+        flex-direction: column;
+    }
+
+    .form-actions-admin button {
+        width: 100%;
+        justify-content: center;
     }
 }
 
