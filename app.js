@@ -459,7 +459,7 @@ async function initAdminPage() {
                     auth: { persistSession: false }
                 });
 
-                // Cadastro no Auth
+                // Cadastro no Supabase Auth
                 const { data: authData, error: authError } = await secondarySupabase.auth.signUp({
                     email: email,
                     password: senha
@@ -470,15 +470,28 @@ async function initAdminPage() {
                 const newUserId = authData.user ? authData.user.id : null;
 
                 if (!newUserId) {
-                    throw new Error('Não foi possível obter a confirmação do usuário criado.');
+                    throw new Error('O Supabase não retornou a confirmação do usuário criado.');
                 }
 
-                // Inserção/Atualização na tabela 'profiles' usando o cliente principal logado
-                const { error: profileError } = await supabaseClient
+                // Gravação do perfil na tabela 'profiles' (Tenta via Admin principal e cliente secundário)
+                let profileErr = null;
+
+                const resPrimary = await supabaseClient
                     .from('profiles')
                     .upsert([{ id: newUserId, email: email, role: role }]);
+                profileErr = resPrimary.error;
 
-                if (profileError) throw profileError;
+                if (profileErr) {
+                    console.warn('Inserção via Admin client falhou, tentando via cliente secundário:', profileErr);
+                    const resSecondary = await secondarySupabase
+                        .from('profiles')
+                        .upsert([{ id: newUserId, email: email, role: role }]);
+                    profileErr = resSecondary.error;
+                }
+
+                if (profileErr) {
+                    throw new Error('Conta criada no Auth, mas erro ao salvar perfil em profiles: ' + profileErr.message);
+                }
 
                 msgSucessoUsuario.innerHTML = `<i class="fa-solid fa-circle-check"></i> Usuário <strong>${escapeHtml(email)}</strong> cadastrado com sucesso como <strong>${role === 'admin' ? 'ADMINISTRADOR' : 'LEITURA'}</strong>!`;
                 msgSucessoUsuario.style.display = 'block';
@@ -489,8 +502,10 @@ async function initAdminPage() {
             } catch (error) {
                 console.error('Erro ao cadastrar usuário:', error);
                 let msg = error.message || 'Falha ao cadastrar usuário.';
-                if (msg.includes('User already registered')) {
-                    msg = 'Este e-mail já está cadastrado no sistema.';
+                if (msg.includes('User already registered') || msg.includes('already registered')) {
+                    msg = 'Este e-mail já está cadastrado no sistema Supabase.';
+                } else if (msg.includes('Password should be at least')) {
+                    msg = 'A senha deve ter no mínimo 6 caracteres.';
                 }
                 msgErroUsuario.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${escapeHtml(msg)}`;
                 msgErroUsuario.style.display = 'block';
