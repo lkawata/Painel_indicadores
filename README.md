@@ -46,4 +46,6 @@ O sistema foi projetado para ser 100% privado, possuindo as seguintes camadas de
 - **Perfis de Acesso (RBAC)**: A tabela `profiles` gerencia os níveis de acesso:
   - **`admin`**: Tem acesso total, incluindo a gestão de usuários e indicadores (`admin.html`).
   - **`leitura`**: Apenas visualiza o catálogo (`index.html`).
-- **Row Level Security (RLS)**: Todas as tabelas do banco possuem RLS ativo. O acesso aos dados no banco PostgreSQL é rigorosamente validado pela função `is_admin()`, que verifica em tempo real o perfil do usuário logado antes de permitir operações de escrita (INSERT, UPDATE, DELETE).
+- **Row Level Security (RLS)**: Todas as tabelas do banco (`indicadores` e `profiles`) possuem RLS ativo. O acesso aos dados no banco PostgreSQL é rigorosamente validado no nível de banco de dados:
+  - A visualização dos dados (SELECT) é restrita apenas a usuários devidamente autenticados (`authenticated`).
+  - As operações de escrita (INSERT, UPDATE, DELETE) são validadas pela função customizada `is_admin()`, garantindo que apenas usuários autenticados com o perfil de administrador (`admin`) possam modificar registros.
