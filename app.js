@@ -49,6 +49,69 @@ async function initIndexPage() {
     if (!supabaseClient && typeof window.supabase !== 'undefined' && window.supabase.createClient) {
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     }
+
+    // 1.1 Autenticação obrigatória (Redirecionamento se deslogado)
+    let { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+
+    if (!session) {
+        // Aguarda 200ms caso o storage local do Supabase ainda esteja hidratando
+        await new Promise(resolve => setTimeout(resolve, 200));
+        const retry = await supabaseClient.auth.getSession();
+        session = retry.data?.session;
+    }
+
+    if (sessionError || !session) {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    // 1.2 Consulta do perfil (role) na tabela 'profiles'
+    let role = 'leitura'; // fallback seguro por padrão
+    try {
+        const { data: profile } = await supabaseClient
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .maybeSingle();
+
+        if (profile && profile.role) {
+            role = profile.role;
+        }
+    } catch (pErr) {
+        console.warn('Não foi possível obter o perfil em profiles:', pErr);
+    }
+
+    // 1.3 Atualização dos botões e badge no cabeçalho
+    const badge = document.getElementById('user-info-badge');
+    if (badge) {
+        const roleLabel = role === 'admin' ? 'Admin' : 'Leitura';
+        badge.innerHTML = `<i class="fa-regular fa-user"></i> ${escapeHtml(session.user.email)} <span class="role-tag">${roleLabel}</span>`;
+        badge.style.display = 'inline-flex';
+    }
+
+    const btnAdmin = document.getElementById('btn-admin-redirect');
+    if (btnAdmin) {
+        if (role === 'admin') {
+            btnAdmin.style.display = 'inline-flex';
+        } else {
+            btnAdmin.style.display = 'none';
+        }
+    }
+
+    const btnLogoutIndex = document.getElementById('btn-logout-index');
+    if (btnLogoutIndex) {
+        btnLogoutIndex.style.display = 'inline-flex';
+        btnLogoutIndex.addEventListener('click', async () => {
+            btnLogoutIndex.disabled = true;
+            btnLogoutIndex.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Saindo...</span>';
+            await supabaseClient.auth.signOut();
+            window.location.href = 'login.html';
+        });
+    }
+
+    // Revela a página index.html após autenticação verificada
+    document.body.style.display = 'block';
+
     const gridContainer = document.getElementById('grid-indicadores');
     const filterBar = document.getElementById('filter-bar');
     const filterPills = document.getElementById('filter-pills');
@@ -188,6 +251,20 @@ function initLoginPage() {
 
     if (!loginForm) return;
 
+    // Se o usuário já estiver logado, redireciona diretamente para index.html
+    (async () => {
+        if (!supabaseClient && typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        }
+        if (supabaseClient) {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                window.location.href = 'index.html';
+                return;
+            }
+        }
+    })();
+
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -223,9 +300,9 @@ function initLoginPage() {
             if (error) throw error;
 
             console.log('Login bem-sucedido!', data);
-            // Small timeout to guarantee localStorage sync before navigation
+            // Redireciona tanto leitor quanto admin para index.html conforme especificado nas regras
             setTimeout(() => {
-                window.location.href = 'admin.html';
+                window.location.href = 'index.html';
             }, 100);
         } catch (error) {
             console.error('Erro no login:', error);
@@ -271,18 +348,260 @@ async function initAdminPage() {
         return;
     }
 
-    // Authenticated - reveal the admin body to prevent visual flashing
+    // 3.1b Consultar perfil do usuário na tabela 'profiles' para validar o role 'admin'
+    let role = null;
+    try {
+        const { data: profile } = await supabaseClient
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .maybeSingle();
+
+        if (profile) {
+            role = profile.role;
+        }
+    } catch (err) {
+        console.error('Erro ao consultar perfil em profiles:', err);
+    }
+
+    if (role !== 'admin') {
+        alert('Acesso negado: Seu perfil não possui permissão de administrador.');
+        window.location.href = 'index.html';
+        return;
+    }
+
+    // Authenticated and Admin - reveal user badge and reveal admin body
+    const badge = document.getElementById('user-info-badge');
+    if (badge) {
+        badge.innerHTML = `<i class="fa-regular fa-user"></i> ${escapeHtml(session.user.email)} <span class="role-tag">Admin</span>`;
+        badge.style.display = 'inline-flex';
+    }
+
     document.body.style.display = 'block';
 
-    // 3.1b Logout Button
+    // 3.1c Logout Button
     const btnLogout = document.getElementById('btn-logout');
     if (btnLogout) {
         btnLogout.addEventListener('click', async () => {
             btnLogout.disabled = true;
             btnLogout.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Saindo...</span>';
             await supabaseClient.auth.signOut();
-            window.location.href = 'index.html';
+            window.location.href = 'login.html';
         });
+    }
+
+    // 3.1d Abas de Navegação Admin (Indicadores vs Usuários)
+    const tabBtnIndicadores = document.getElementById('tab-btn-indicadores');
+    const tabBtnUsuarios = document.getElementById('tab-btn-usuarios');
+    const tabIndicadores = document.getElementById('tab-indicadores');
+    const tabUsuarios = document.getElementById('tab-usuarios');
+
+    if (tabBtnIndicadores && tabBtnUsuarios) {
+        tabBtnIndicadores.addEventListener('click', () => {
+            tabBtnIndicadores.classList.add('active');
+            tabBtnUsuarios.classList.remove('active');
+            tabIndicadores.style.display = 'block';
+            tabUsuarios.style.display = 'none';
+        });
+
+        tabBtnUsuarios.addEventListener('click', async () => {
+            tabBtnUsuarios.classList.add('active');
+            tabBtnIndicadores.classList.remove('active');
+            tabUsuarios.style.display = 'block';
+            tabIndicadores.style.display = 'none';
+            await fetchAndRenderUsersList();
+        });
+    }
+
+    // 3.1e Formulário de Cadastro de Novo Usuário (com dupla conferência de senha)
+    const formUsuario = document.getElementById('form-usuario');
+    const emailUsuarioInput = document.getElementById('email-usuario');
+    const senhaUsuarioInput = document.getElementById('senha-usuario');
+    const confirmarSenhaUsuarioInput = document.getElementById('confirmar-senha-usuario');
+    const roleUsuarioSelect = document.getElementById('role-usuario');
+    const msgErroUsuario = document.getElementById('mensagem-erro-usuario');
+    const msgSucessoUsuario = document.getElementById('mensagem-sucesso-usuario');
+    const btnCadastrarUsuario = document.getElementById('btn-cadastrar-usuario');
+
+    if (formUsuario) {
+        formUsuario.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            msgErroUsuario.style.display = 'none';
+            msgSucessoUsuario.style.display = 'none';
+
+            const email = emailUsuarioInput.value.trim();
+            const senha = senhaUsuarioInput.value;
+            const confirmarSenha = confirmarSenhaUsuarioInput.value;
+            const role = roleUsuarioSelect.value;
+
+            // Dupla conferência de senha
+            if (senha !== confirmarSenha) {
+                msgErroUsuario.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> As senhas não coincidem. Por favor, verifique a digitação.';
+                msgErroUsuario.style.display = 'block';
+                return;
+            }
+
+            if (senha.length < 6) {
+                msgErroUsuario.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> A senha deve ter no mínimo 6 caracteres.';
+                msgErroUsuario.style.display = 'block';
+                return;
+            }
+
+            // Lock submit button
+            const originalBtnHTML = btnCadastrarUsuario.innerHTML;
+            btnCadastrarUsuario.disabled = true;
+            btnCadastrarUsuario.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Cadastrando...';
+
+            try {
+                // Instância de cliente secundário sem persistência de sessão para não deslogar o Admin
+                const secondarySupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+                    auth: { persistSession: false }
+                });
+
+                // Cadastro no Auth
+                const { data: authData, error: authError } = await secondarySupabase.auth.signUp({
+                    email: email,
+                    password: senha
+                });
+
+                if (authError) throw authError;
+
+                const newUserId = authData.user ? authData.user.id : null;
+
+                if (!newUserId) {
+                    throw new Error('Não foi possível obter a confirmação do usuário criado.');
+                }
+
+                // Inserção/Atualização na tabela 'profiles' usando o cliente principal logado
+                const { error: profileError } = await supabaseClient
+                    .from('profiles')
+                    .upsert([{ id: newUserId, email: email, role: role }]);
+
+                if (profileError) throw profileError;
+
+                msgSucessoUsuario.innerHTML = `<i class="fa-solid fa-circle-check"></i> Usuário <strong>${escapeHtml(email)}</strong> cadastrado com sucesso como <strong>${role === 'admin' ? 'ADMINISTRADOR' : 'LEITURA'}</strong>!`;
+                msgSucessoUsuario.style.display = 'block';
+
+                formUsuario.reset();
+                await fetchAndRenderUsersList();
+
+            } catch (error) {
+                console.error('Erro ao cadastrar usuário:', error);
+                let msg = error.message || 'Falha ao cadastrar usuário.';
+                if (msg.includes('User already registered')) {
+                    msg = 'Este e-mail já está cadastrado no sistema.';
+                }
+                msgErroUsuario.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${escapeHtml(msg)}`;
+                msgErroUsuario.style.display = 'block';
+            } finally {
+                btnCadastrarUsuario.disabled = false;
+                btnCadastrarUsuario.innerHTML = originalBtnHTML;
+            }
+        });
+    }
+
+    // 3.1f Função para carregar e listar os usuários na tabela
+    async function fetchAndRenderUsersList() {
+        const listaUsuariosBody = document.getElementById('lista-usuarios');
+        if (!listaUsuariosBody) return;
+
+        listaUsuariosBody.innerHTML = `
+            <tr>
+                <td colspan="3" style="text-align: center; padding: 2rem; color: #64748b;">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Carregando usuários...
+                </td>
+            </tr>
+        `;
+
+        try {
+            const { data: profiles, error } = await supabaseClient
+                .from('profiles')
+                .select('*')
+                .order('email', { ascending: true });
+
+            if (error) throw error;
+
+            if (!profiles || profiles.length === 0) {
+                listaUsuariosBody.innerHTML = `
+                    <tr>
+                        <td colspan="3" style="text-align: center; padding: 2rem; color: #64748b;">
+                            Nenhum perfil cadastrado na tabela 'profiles'.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            listaUsuariosBody.innerHTML = '';
+            profiles.forEach(userProfile => {
+                const tr = document.createElement('tr');
+                const isSelf = userProfile.id === session.user.id;
+                const currentRole = userProfile.role || 'leitura';
+                const roleBadgeClass = currentRole === 'admin' ? 'admin' : 'leitura';
+                const roleLabel = currentRole === 'admin' ? 'Administrador' : 'Leitura';
+
+                tr.innerHTML = `
+                    <td>
+                        <div style="font-weight: 600; color: #0f172a;">
+                            ${escapeHtml(userProfile.email)}
+                            ${isSelf ? '<small style="color: #2563eb; margin-left: 6px; font-weight: 700;">(Você)</small>' : ''}
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge-role ${roleBadgeClass}">
+                            <i class="fa-solid ${currentRole === 'admin' ? 'fa-user-shield' : 'fa-book-open'}"></i>
+                            ${roleLabel}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="table-actions">
+                            <button class="btn-action-edit btn-toggle-role" data-id="${userProfile.id}" data-role="${currentRole}" ${isSelf ? 'disabled style="opacity: 0.5; cursor: not-allowed;" title="Sua própria conta"' : ''}>
+                                <i class="fa-solid fa-user-gear"></i>
+                                <span>${currentRole === 'admin' ? 'Mudar para Leitura' : 'Tornar Admin'}</span>
+                            </button>
+                        </div>
+                    </td>
+                `;
+
+                const btnToggle = tr.querySelector('.btn-toggle-role');
+                if (btnToggle && !isSelf) {
+                    btnToggle.addEventListener('click', async () => {
+                        const newRole = currentRole === 'admin' ? 'leitura' : 'admin';
+                        if (!confirm(`Deseja alterar o perfil de "${userProfile.email}" para "${newRole.toUpperCase()}"?`)) return;
+
+                        btnToggle.disabled = true;
+                        btnToggle.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+                        try {
+                            const { error: updateErr } = await supabaseClient
+                                .from('profiles')
+                                .update({ role: newRole })
+                                .eq('id', userProfile.id);
+
+                            if (updateErr) throw updateErr;
+
+                            await fetchAndRenderUsersList();
+                        } catch (err) {
+                            alert('Erro ao atualizar perfil: ' + err.message);
+                            await fetchAndRenderUsersList();
+                        }
+                    });
+                }
+
+                listaUsuariosBody.appendChild(tr);
+            });
+
+        } catch (err) {
+            console.error('Erro ao listar usuários:', err);
+            listaUsuariosBody.innerHTML = `
+                <tr>
+                    <td colspan="3" style="text-align: center; color: #ef4444; padding: 2rem;">
+                        Erro ao carregar lista de usuários: ${escapeHtml(err.message)}
+                    </td>
+                </tr>
+            `;
+        }
     }
 
     // 3.2 Initialize Dashboard components

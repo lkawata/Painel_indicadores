@@ -665,7 +665,10 @@ body {
 }
 
 .form-group-admin input[type="text"],
+.form-group-admin input[type="email"],
+.form-group-admin input[type="password"],
 .form-group-admin input[type="url"],
+.form-group-admin input,
 .form-group-admin textarea {
     width: 100%;
     padding: 0.75rem 0.9rem;
@@ -679,7 +682,8 @@ body {
 }
 
 .form-group-admin input:focus,
-.form-group-admin textarea:focus {
+.form-group-admin textarea:focus,
+.form-group-admin select:focus {
     outline: none;
     border-color: #1e3a8a;
     background-color: #ffffff;
@@ -914,4 +918,161 @@ body {
     .btn-action-delete {
         padding: 0.4rem 0.6rem;
     }
+}
+
+/* ==========================================================================
+   9. HEADER USER ACTIONS & USER BADGE
+   ========================================================================== */
+.header-user-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.user-info-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: rgba(255, 255, 255, 0.12);
+    color: #f1f5f9;
+    padding: 0.4rem 0.85rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.user-info-badge .role-tag {
+    background-color: #38bdf8;
+    color: #0f172a;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.1rem 0.45rem;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.btn-logout-header {
+    background-color: rgba(239, 68, 68, 0.18);
+    border-color: rgba(239, 68, 68, 0.35);
+    color: #fca5a5;
+    cursor: pointer;
+}
+
+.btn-logout-header:hover {
+    background-color: #ef4444;
+    color: #ffffff;
+    border-color: #ef4444;
+}
+
+/* ==========================================================================
+   10. ADMIN TABS & USER MANAGEMENT STYLES
+   ========================================================================== */
+.admin-tabs {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 0.5rem;
+}
+
+.admin-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.admin-tab-btn i {
+    font-size: 1.1rem;
+}
+
+.admin-tab-btn:hover {
+    color: #1e3a8a;
+    background-color: #eff6ff;
+}
+
+.admin-tab-btn.active {
+    color: #ffffff;
+    background-color: #1e3a8a;
+    background-image: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2);
+}
+
+.password-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 640px) {
+    .password-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.select-admin {
+    width: 100%;
+    padding: 0.75rem 0.9rem;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    font-size: 0.9rem;
+    font-family: inherit;
+    color: #1e293b;
+    background-color: #f8fafc;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.select-admin:focus {
+    outline: none;
+    border-color: #1e3a8a;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.12);
+}
+
+.success-alert {
+    background-color: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    margin-bottom: 1.25rem;
+    text-align: left;
+    font-weight: 500;
+}
+
+.badge-role {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.badge-role.admin {
+    background-color: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
+}
+
+.badge-role.leitura {
+    background-color: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
 }

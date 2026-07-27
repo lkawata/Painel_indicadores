@@ -28,105 +28,210 @@
                 <img src="logo-ame.png.png" alt="Logo AME Praia Grande" class="header-logo-img">
                 <h1>Gerenciamento de Indicadores</h1>
             </div>
-            <button class="btn-admin" id="btn-logout">
-                <i class="fa-solid fa-right-from-bracket"></i>
-                <span>Sair</span>
-            </button>
+            <div class="header-user-actions">
+                <a href="index.html" class="btn-admin" id="btn-view-index">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Ver Painel</span>
+                </a>
+                <span id="user-info-badge" class="user-info-badge" style="display: none;"></span>
+                <button class="btn-admin btn-logout-header" id="btn-logout">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Sair</span>
+                </button>
+            </div>
         </div>
     </header>
 
     <!-- Main Admin Container -->
     <main class="main-content">
-        <div class="admin-grid-layout">
 
-            <!-- Left Column: Form Area -->
-            <section class="admin-section-form">
-                <div class="admin-card">
-                    <div class="card-header-admin">
-                        <i class="fa-solid fa-pen-to-square"></i>
-                        <h2>Formulário de Indicador</h2>
-                    </div>
-
-                    <form id="form-indicador" onsubmit="event.preventDefault();" class="admin-form">
-                        <!-- Input hidden to manage creation or edit modes -->
-                        <input type="hidden" id="indicador-id" value="">
-
-                        <div class="form-group-admin">
-                            <label for="titulo-indicador">Título do Indicador</label>
-                            <input type="text" id="titulo-indicador" placeholder="Ex: Satisfação do Paciente (NPS)"
-                                required>
-                        </div>
-
-                        <div class="form-group-admin">
-                            <label for="tag-indicador">Setor</label>
-                            <input type="text" id="tag-indicador" placeholder="Ex: Qualidade, Agendamento, Recepção...">
-                        </div>
-
-                        <div class="form-group-admin">
-                            <label for="descricao-detalhada">Descrição Detalhada</label>
-                            <textarea id="descricao-detalhada" rows="4"
-                                placeholder="Escreva uma descrição clara e objetiva para o overlay do card..."
-                                required></textarea>
-                        </div>
-
-                        <div class="form-group-admin">
-                            <label for="link-powerbi">Link do Power BI</label>
-                            <input type="url" id="link-powerbi" placeholder="https://app.powerbi.com/view?r=..."
-                                required>
-                        </div>
-
-                        <div class="form-group-admin">
-                            <label for="upload-imagem">Imagem de Fundo</label>
-                            <div class="file-upload-wrapper">
-                                <label class="file-upload-label" for="upload-imagem">
-                                    <i class="fa-solid fa-cloud-arrow-up"></i>
-                                    <span>Escolher arquivo de imagem...</span>
-                                </label>
-                                <input type="file" id="upload-imagem" accept="image/*" class="file-upload-input">
-                            </div>
-                        </div>
-
-                        <div class="form-actions-admin">
-                            <button type="submit" id="btn-salvar" class="btn-primary-admin">
-                                <i class="fa-solid fa-floppy-disk"></i>
-                                <span>Salvar Indicador</span>
-                            </button>
-
-                            <button type="button" id="btn-cancelar" class="btn-secondary-admin" style="display: none;">
-                                <i class="fa-solid fa-xmark"></i>
-                                <span>Cancelar Edição</span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </section>
-
-            <!-- Right Column: Registered Indicators List -->
-            <section class="admin-section-list">
-                <div class="admin-card">
-                    <div class="card-header-admin">
-                        <i class="fa-solid fa-list-check"></i>
-                        <h2>Indicadores Cadastrados</h2>
-                    </div>
-
-                    <div class="table-responsive">
-                        <table class="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>Miniatura</th>
-                                    <th>Título</th>
-                                    <th class="actions-header">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="lista-indicadores">
-                                <!-- Conteúdo renderizado dinamicamente pelo app.js via Supabase -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
+        <!-- Admin Navigation Tabs -->
+        <div class="admin-tabs">
+            <button class="admin-tab-btn active" id="tab-btn-indicadores" data-tab="tab-indicadores">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>Gestão de Indicadores</span>
+            </button>
+            <button class="admin-tab-btn" id="tab-btn-usuarios" data-tab="tab-usuarios">
+                <i class="fa-solid fa-users-gear"></i>
+                <span>Gestão de Usuários e Perfis</span>
+            </button>
         </div>
+
+        <!-- TAB 1: GESTÃO DE INDICADORES -->
+        <div class="tab-content active" id="tab-indicadores">
+            <div class="admin-grid-layout">
+
+                <!-- Left Column: Form Area -->
+                <section class="admin-section-form">
+                    <div class="admin-card">
+                        <div class="card-header-admin">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                            <h2>Formulário de Indicador</h2>
+                        </div>
+
+                        <form id="form-indicador" onsubmit="event.preventDefault();" class="admin-form">
+                            <!-- Input hidden to manage creation or edit modes -->
+                            <input type="hidden" id="indicador-id" value="">
+
+                            <div class="form-group-admin">
+                                <label for="titulo-indicador">Título do Indicador</label>
+                                <input type="text" id="titulo-indicador" placeholder="Ex: Satisfação do Paciente (NPS)"
+                                    required>
+                            </div>
+
+                            <div class="form-group-admin">
+                                <label for="tag-indicador">Setor</label>
+                                <input type="text" id="tag-indicador" placeholder="Ex: Qualidade, Agendamento, Recepção...">
+                            </div>
+
+                            <div class="form-group-admin">
+                                <label for="descricao-detalhada">Descrição Detalhada</label>
+                                <textarea id="descricao-detalhada" rows="4"
+                                    placeholder="Escreva uma descrição clara e objetiva para o overlay do card..."
+                                    required></textarea>
+                            </div>
+
+                            <div class="form-group-admin">
+                                <label for="link-powerbi">Link do Power BI</label>
+                                <input type="url" id="link-powerbi" placeholder="https://app.powerbi.com/view?r=..."
+                                    required>
+                            </div>
+
+                            <div class="form-group-admin">
+                                <label for="upload-imagem">Imagem de Fundo</label>
+                                <div class="file-upload-wrapper">
+                                    <label class="file-upload-label" for="upload-imagem">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                                        <span>Escolher arquivo de imagem...</span>
+                                    </label>
+                                    <input type="file" id="upload-imagem" accept="image/*" class="file-upload-input">
+                                </div>
+                            </div>
+
+                            <div class="form-actions-admin">
+                                <button type="submit" id="btn-salvar" class="btn-primary-admin">
+                                    <i class="fa-solid fa-floppy-disk"></i>
+                                    <span>Salvar Indicador</span>
+                                </button>
+
+                                <button type="button" id="btn-cancelar" class="btn-secondary-admin" style="display: none;">
+                                    <i class="fa-solid fa-xmark"></i>
+                                    <span>Cancelar Edição</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- Right Column: Registered Indicators List -->
+                <section class="admin-section-list">
+                    <div class="admin-card">
+                        <div class="card-header-admin">
+                            <i class="fa-solid fa-list-check"></i>
+                            <h2>Indicadores Cadastrados</h2>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Miniatura</th>
+                                        <th>Título</th>
+                                        <th class="actions-header">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lista-indicadores">
+                                    <!-- Conteúdo renderizado dinamicamente pelo app.js via Supabase -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+
+        <!-- TAB 2: GESTÃO DE USUÁRIOS E PERFIS -->
+        <div class="tab-content" id="tab-usuarios" style="display: none;">
+            <div class="admin-grid-layout">
+
+                <!-- Left Column: New User Registration Form -->
+                <section class="admin-section-form">
+                    <div class="admin-card">
+                        <div class="card-header-admin">
+                            <i class="fa-solid fa-user-plus"></i>
+                            <h2>Cadastrar Novo Usuário</h2>
+                        </div>
+
+                        <form id="form-usuario" class="admin-form">
+                            <!-- Alert Containers -->
+                            <div id="mensagem-erro-usuario" class="error-alert" style="display: none;"></div>
+                            <div id="mensagem-sucesso-usuario" class="success-alert" style="display: none;"></div>
+
+                            <div class="form-group-admin">
+                                <label for="email-usuario"><i class="fa-regular fa-envelope"></i> E-mail de Acesso</label>
+                                <input type="email" id="email-usuario" placeholder="usuario@amepg.fuabc.org.br" required autocomplete="off">
+                            </div>
+
+                            <!-- Dupla Conferência de Senha -->
+                            <div class="password-grid">
+                                <div class="form-group-admin">
+                                    <label for="senha-usuario"><i class="fa-solid fa-key"></i> Senha</label>
+                                    <input type="password" id="senha-usuario" placeholder="Mínimo 6 caracteres" required autocomplete="new-password">
+                                </div>
+
+                                <div class="form-group-admin">
+                                    <label for="confirmar-senha-usuario"><i class="fa-solid fa-check-double"></i> Confirmar Senha</label>
+                                    <input type="password" id="confirmar-senha-usuario" placeholder="Repita a senha" required autocomplete="new-password">
+                                </div>
+                            </div>
+
+                            <div class="form-group-admin">
+                                <label for="role-usuario"><i class="fa-solid fa-user-gear"></i> Perfil de Acesso (Role)</label>
+                                <select id="role-usuario" class="select-admin" required>
+                                    <option value="leitura">Leitura (Apenas visualização de indicadores)</option>
+                                    <option value="admin">Administrador (Acesso total e gestão)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-actions-admin">
+                                <button type="submit" id="btn-cadastrar-usuario" class="btn-primary-admin">
+                                    <i class="fa-solid fa-user-check"></i>
+                                    <span>Cadastrar Usuário</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- Right Column: Registered Users List -->
+                <section class="admin-section-list">
+                    <div class="admin-card">
+                        <div class="card-header-admin">
+                            <i class="fa-solid fa-users"></i>
+                            <h2>Usuários & Perfis Cadastrados</h2>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>E-mail</th>
+                                        <th>Perfil (Role)</th>
+                                        <th class="actions-header">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lista-usuarios">
+                                    <!-- Conteúdo renderizado dinamicamente pelo app.js via Supabase -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+
     </main>
 
     <!-- Footer -->

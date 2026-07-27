@@ -19,7 +19,7 @@
     <script src="app.js"></script>
 </head>
 
-<body>
+<body style="display: none;">
 
     <!-- Corporate Header -->
     <header class="corp-header">
@@ -28,10 +28,17 @@
                 <img src="logo-ame.png.png" alt="Logo AME Praia Grande" class="header-logo-img">
                 <h1>PAINEL DE INDICADORES AME PRAIA GRANDE</h1>
             </div>
-            <a href="login.html" class="btn-admin" id="btn-admin-redirect">
-                <i class="fa-solid fa-user-shield"></i>
-                <span>Área do Admin</span>
-            </a>
+            <div class="header-user-actions">
+                <span id="user-info-badge" class="user-info-badge" style="display: none;"></span>
+                <a href="admin.html" class="btn-admin" id="btn-admin-redirect" style="display: none;">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <span>Painel Admin</span>
+                </a>
+                <button class="btn-admin btn-logout-header" id="btn-logout-index" style="display: none;">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Sair</span>
+                </button>
+            </div>
         </div>
     </header>
 
