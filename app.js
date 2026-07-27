@@ -265,6 +265,18 @@ function initLoginPage() {
         }
     })();
 
+    // Toggle para visualizar/ocultar senha no login
+    const btnTogglePassword = document.getElementById('btn-toggle-password');
+    const togglePasswordIcon = document.getElementById('toggle-password-icon');
+
+    if (btnTogglePassword && passwordInput && togglePasswordIcon) {
+        btnTogglePassword.addEventListener('click', () => {
+            const isPassword = passwordInput.getAttribute('type') === 'password';
+            passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+            togglePasswordIcon.className = isPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+        });
+    }
+
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
