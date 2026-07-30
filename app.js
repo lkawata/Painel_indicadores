@@ -372,7 +372,6 @@ function initLoginPage() {
 
             if (error) throw error;
 
-            console.log('Login bem-sucedido!', data);
             // Redireciona tanto leitor quanto admin para index.html conforme especificado nas regras
             setTimeout(() => {
                 window.location.href = 'index.html';
@@ -1073,6 +1072,7 @@ async function initAdminPage() {
     function resetAdminForm() {
         form.reset();
         idInput.value = '';
+        if (fileInput) fileInput.value = '';
         if (tagInput) tagInput.selectedIndex = 0;
         document.querySelector('.file-upload-label span').textContent = 'Escolher arquivo de imagem...';
         btnCancelar.style.display = 'none';
