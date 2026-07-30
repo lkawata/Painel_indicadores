@@ -40,6 +40,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (document.getElementById('form-indicador')) {
         await initAdminPage();
     }
+
+    // 4. Reset Password Page
+    if (document.getElementById('form-reset-password')) {
+        await initResetPasswordPage();
+    }
 });
 
 // ==========================================================================
@@ -390,6 +395,96 @@ function initLoginPage() {
             submitBtn.innerHTML = originalBtnText;
         }
     });
+
+    // --- Lógica: Esqueci minha senha ---
+    const btnShowForgot = document.getElementById('btn-show-forgot');
+    const forgotPanel = document.getElementById('forgot-password-panel');
+    const btnCancelForgot = document.getElementById('btn-cancel-forgot');
+    const btnSendReset = document.getElementById('btn-send-reset');
+    const forgotEmailInput = document.getElementById('forgot-email');
+    const forgotSuccess = document.getElementById('forgot-success');
+    const forgotError = document.getElementById('forgot-error');
+
+    // Exibe o painel de redefinição ao clicar no link
+    if (btnShowForgot && forgotPanel) {
+        btnShowForgot.addEventListener('click', () => {
+            forgotPanel.style.display = 'block';
+            forgotPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            // Pré-preenche o e-mail se já digitou no campo principal
+            if (forgotEmailInput && emailInput && emailInput.value) {
+                forgotEmailInput.value = emailInput.value;
+            }
+            forgotEmailInput && forgotEmailInput.focus();
+        });
+    }
+
+    // Fecha o painel
+    if (btnCancelForgot && forgotPanel) {
+        btnCancelForgot.addEventListener('click', () => {
+            forgotPanel.style.display = 'none';
+            if (forgotSuccess) forgotSuccess.style.display = 'none';
+            if (forgotError) forgotError.style.display = 'none';
+            if (forgotEmailInput) forgotEmailInput.value = '';
+        });
+    }
+
+    // Envia o link de redefinição via Supabase
+    if (btnSendReset) {
+        btnSendReset.addEventListener('click', async () => {
+            if (!forgotEmailInput) return;
+
+            const email = forgotEmailInput.value.trim();
+            if (!email) {
+                if (forgotError) {
+                    forgotError.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Por favor, informe seu e-mail.';
+                    forgotError.style.display = 'block';
+                }
+                forgotEmailInput.focus();
+                return;
+            }
+
+            // Estado de carregamento
+            const originalBtnHTML = btnSendReset.innerHTML;
+            btnSendReset.disabled = true;
+            btnSendReset.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Enviando...</span>';
+            if (forgotSuccess) forgotSuccess.style.display = 'none';
+            if (forgotError) forgotError.style.display = 'none';
+
+            try {
+                // URL de redirecionamento — página de redefinição no mesmo domínio
+                const redirectTo = window.location.origin +
+                    window.location.pathname.replace(/\/[^\/]*$/, '/reset-password.html');
+
+                const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                    redirectTo: redirectTo
+                });
+
+                if (error) throw error;
+
+                // Sempre exibe mensagem de sucesso (mesmo para e-mails inexistentes — por segurança)
+                if (forgotSuccess) {
+                    forgotSuccess.innerHTML = `
+                        <i class="fa-solid fa-circle-check"></i>
+                        Se este e-mail estiver cadastrado, você receberá um link de redefinição em instantes.
+                        Verifique também sua caixa de spam.
+                    `;
+                    forgotSuccess.style.display = 'block';
+                }
+                if (forgotError) forgotError.style.display = 'none';
+                btnSendReset.disabled = true; // Mantém desabilitado para evitar múltiplos envios
+                btnSendReset.innerHTML = '<i class="fa-solid fa-check"></i> <span>Link Enviado</span>';
+
+            } catch (err) {
+                console.error('Erro ao enviar link de redefinição:', err);
+                if (forgotError) {
+                    forgotError.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${escapeHtml(err.message || 'Erro ao enviar. Tente novamente.')}` ;
+                    forgotError.style.display = 'block';
+                }
+                btnSendReset.disabled = false;
+                btnSendReset.innerHTML = originalBtnHTML;
+            }
+        });
+    }
 }
 
 // ==========================================================================
@@ -966,4 +1061,138 @@ function sanitizeUrl(url) {
         return '#';
     }
     return escapeHtml(trimmed);
+}
+
+// ==========================================================================
+// 5. RESET PASSWORD PAGE LOGIC (reset-password.html)
+// ==========================================================================
+async function initResetPasswordPage() {
+    if (!supabaseClient && typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+
+    const formReset = document.getElementById('form-reset-password');
+    const loadingEl = document.getElementById('reset-loading');
+    const invalidTokenEl = document.getElementById('reset-invalid-token');
+    const resetError = document.getElementById('reset-error');
+    const resetSuccess = document.getElementById('reset-success');
+
+    // O Supabase envia o token no hash da URL (#access_token=...&type=recovery)
+    // O SDK detecta automaticamente via onAuthStateChange
+    supabaseClient.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'PASSWORD_RECOVERY') {
+            // Token válido — mostra o formulário
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (formReset) formReset.style.display = 'block';
+        } else if (event === 'SIGNED_IN' && session) {
+            // Já logado mas sem recovery — oculta loading se ainda visível
+            if (loadingEl) loadingEl.style.display = 'none';
+        }
+    });
+
+    // Aguarda 3s para o SDK processar o hash. Se não houver evento, mostra token inválido.
+    setTimeout(() => {
+        if (loadingEl && loadingEl.style.display !== 'none') {
+            loadingEl.style.display = 'none';
+            if (invalidTokenEl) invalidTokenEl.style.display = 'block';
+        }
+    }, 3000);
+
+    // Toggle visualizar/ocultar nova senha
+    const btnToggleNew = document.getElementById('btn-toggle-new-password');
+    const iconToggleNew = document.getElementById('toggle-new-password-icon');
+    const newPasswordInput = document.getElementById('new-password');
+
+    if (btnToggleNew && newPasswordInput && iconToggleNew) {
+        btnToggleNew.addEventListener('click', () => {
+            const isPassword = newPasswordInput.type === 'password';
+            newPasswordInput.type = isPassword ? 'text' : 'password';
+            iconToggleNew.className = isPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+        });
+    }
+
+    // Toggle visualizar/ocultar confirmação de senha
+    const btnToggleConfirm = document.getElementById('btn-toggle-confirm-password');
+    const iconToggleConfirm = document.getElementById('toggle-confirm-password-icon');
+    const confirmPasswordInput = document.getElementById('confirm-password');
+
+    if (btnToggleConfirm && confirmPasswordInput && iconToggleConfirm) {
+        btnToggleConfirm.addEventListener('click', () => {
+            const isPassword = confirmPasswordInput.type === 'password';
+            confirmPasswordInput.type = isPassword ? 'text' : 'password';
+            iconToggleConfirm.className = isPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+        });
+    }
+
+    // Submissão do formulário de nova senha
+    if (formReset) {
+        formReset.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (resetError) resetError.style.display = 'none';
+            if (resetSuccess) resetSuccess.style.display = 'none';
+
+            const newPassword = newPasswordInput ? newPasswordInput.value : '';
+            const confirmPassword = confirmPasswordInput ? confirmPasswordInput.value : '';
+
+            // Validação de tamanho mínimo
+            if (newPassword.length < 6) {
+                if (resetError) {
+                    resetError.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> A senha deve ter no mínimo 6 caracteres.';
+                    resetError.style.display = 'block';
+                }
+                return;
+            }
+
+            // Validação de confirmação
+            if (newPassword !== confirmPassword) {
+                if (resetError) {
+                    resetError.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> As senhas não coincidem. Verifique e tente novamente.';
+                    resetError.style.display = 'block';
+                }
+                return;
+            }
+
+            // Estado de carregamento
+            const btnSave = document.getElementById('btn-save-password');
+            const originalBtnHTML = btnSave ? btnSave.innerHTML : '';
+            if (btnSave) {
+                btnSave.disabled = true;
+                btnSave.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Salvando...</span>';
+            }
+
+            try {
+                const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+
+                if (error) throw error;
+
+                // Sucesso!
+                if (resetSuccess) {
+                    resetSuccess.innerHTML = `
+                        <i class="fa-solid fa-circle-check"></i>
+                        Senha alterada com sucesso! Redirecionando para o login...
+                    `;
+                    resetSuccess.style.display = 'block';
+                }
+                if (formReset) formReset.style.display = 'none';
+
+                // Desloga e redireciona para login após 2.5s
+                setTimeout(async () => {
+                    await supabaseClient.auth.signOut();
+                    window.location.href = 'login.html';
+                }, 2500);
+
+            } catch (err) {
+                console.error('Erro ao atualizar senha:', err);
+                if (resetError) {
+                    resetError.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${escapeHtml(err.message || 'Falha ao salvar a nova senha. Tente novamente.')}`;
+                    resetError.style.display = 'block';
+                }
+                if (btnSave) {
+                    btnSave.disabled = false;
+                    btnSave.innerHTML = originalBtnHTML;
+                }
+            }
+        });
+    }
 }

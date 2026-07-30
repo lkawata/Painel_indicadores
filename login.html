@@ -55,7 +55,47 @@
                     <span>Entrar</span>
                     <i class="fa-solid fa-right-to-bracket"></i>
                 </button>
+
+                <!-- Link Esqueci minha senha -->
+                <div class="forgot-password-link-wrapper">
+                    <button type="button" class="btn-forgot-link" id="btn-show-forgot">
+                        <i class="fa-solid fa-unlock-keyhole"></i>
+                        Esqueci minha senha
+                    </button>
+                </div>
             </form>
+
+            <!-- Painel de Redefinição de Senha (oculto por padrão) -->
+            <div id="forgot-password-panel" class="forgot-password-panel" style="display: none;">
+                <div class="forgot-divider">
+                    <span>Redefinição de Senha</span>
+                </div>
+
+                <!-- Mensagens de feedback -->
+                <div id="forgot-success" class="success-alert" style="display: none;"></div>
+                <div id="forgot-error" class="error-alert" style="display: none;"></div>
+
+                <p class="forgot-instructions">
+                    <i class="fa-solid fa-circle-info"></i>
+                    Informe seu e-mail cadastrado. Enviaremos um link seguro para você criar uma nova senha.
+                </p>
+
+                <div class="form-group" style="margin-bottom: 0.75rem;">
+                    <label for="forgot-email">
+                        <i class="fa-regular fa-envelope"></i> E-mail de Acesso
+                    </label>
+                    <input type="email" id="forgot-email" placeholder="nome@amepg.fuabc.org.br" autocomplete="email">
+                </div>
+
+                <button type="button" class="btn-login btn-reset-send" id="btn-send-reset">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    <span>Enviar Link de Redefinição</span>
+                </button>
+
+                <button type="button" class="btn-cancel-forgot" id="btn-cancel-forgot">
+                    <i class="fa-solid fa-xmark"></i> Cancelar
+                </button>
+            </div>
 
             <div class="login-footer">
                 <span class="btn-back-home" style="cursor: default;">
