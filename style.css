@@ -126,7 +126,16 @@ body {
 
 .welcome-section {
     margin-bottom: 2.5rem;
-    text-align: left;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.welcome-title-group {
+    flex-shrink: 0;
 }
 
 .welcome-section h2 {
@@ -140,6 +149,111 @@ body {
     color: #64748b;
     font-size: 1rem;
     max-width: 700px;
+}
+
+/* ==========================================================================
+   3.2 KPI MINI-CARDS — Estatísticas Rápidas
+   ========================================================================== */
+.kpi-cards-row {
+    display: flex;
+    flex-direction: row;
+    gap: 0.875rem;
+    flex-shrink: 0;
+}
+
+.kpi-card {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.875rem;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 0.875rem 1.125rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+    min-width: 148px;
+    transition: box-shadow 0.22s ease, transform 0.22s ease, border-color 0.22s ease;
+    cursor: default;
+}
+
+.kpi-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(30, 58, 138, 0.10), 0 2px 6px rgba(0, 0, 0, 0.05);
+    border-color: #c7d7f5;
+}
+
+/* Ícone container */
+.kpi-card-icon {
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Variantes de cor do ícone */
+.kpi-icon-blue {
+    background-color: #eff6ff;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
+}
+
+.kpi-icon-indigo {
+    background-color: #eef2ff;
+    color: #4338ca;
+    border: 1px solid #c7d2fe;
+}
+
+.kpi-icon-teal {
+    background-color: #f0fdfa;
+    color: #0f766e;
+    border: 1px solid #99f6e4;
+}
+
+/* Conteúdo textual do card */
+.kpi-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.05rem;
+    min-width: 0;
+}
+
+.kpi-card-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    line-height: 1.2;
+}
+
+.kpi-card-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #1e3a8a;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+}
+
+/* Valor menor para textos longos (ex: Mês/Ano) */
+.kpi-card-value.kpi-value-sm {
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.kpi-card-sub {
+    font-size: 0.72rem;
+    color: #64748b;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+    line-height: 1.3;
 }
 
 /* ==========================================================================
@@ -1110,4 +1224,46 @@ body {
 
 .btn-toggle-password:hover {
     color: #1e3a8a;
+}
+
+/* ==========================================================================
+   12. RESPONSIVE — KPI CARDS (media queries)
+   ========================================================================== */
+
+/* Tablet / médio: empilha título e cards em coluna */
+@media (max-width: 900px) {
+    .welcome-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.25rem;
+    }
+
+    .kpi-cards-row {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .kpi-card {
+        flex: 1 1 calc(50% - 0.5rem);
+        min-width: 140px;
+    }
+}
+
+/* Mobile pequeno: cards em coluna única */
+@media (max-width: 480px) {
+    .kpi-cards-row {
+        flex-direction: column;
+        gap: 0.625rem;
+    }
+
+    .kpi-card {
+        flex: unset;
+        width: 100%;
+        min-width: unset;
+    }
+
+    .kpi-card-value {
+        font-size: 1.3rem;
+    }
 }
