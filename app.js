@@ -794,7 +794,36 @@ async function initAdminPage() {
     const btnSalvar = document.getElementById('btn-salvar');
     const listTableBody = document.getElementById('lista-indicadores');
 
-    // Fetch and load indicators
+    // Fetch sectors from 'setores' table and populate dropdown
+    async function fetchAndPopulateSetores() {
+        if (!tagInput) return;
+        try {
+            const { data: setores, error } = await supabaseClient
+                .from('setores')
+                .select('nome')
+                .order('nome', { ascending: true });
+
+            if (error) throw error;
+
+            if (setores && setores.length > 0) {
+                tagInput.innerHTML = '<option value="" disabled selected>Selecione um Setor / Comissão...</option>';
+                setores.forEach(s => {
+                    const option = document.createElement('option');
+                    option.value = s.nome;
+                    option.textContent = s.nome;
+                    tagInput.appendChild(option);
+                });
+            } else {
+                tagInput.innerHTML = '<option value="" disabled selected>Nenhum setor cadastrado</option>';
+            }
+        } catch (err) {
+            console.error('Erro ao carregar setores:', err);
+            tagInput.innerHTML = '<option value="" disabled selected>Erro ao carregar setores</option>';
+        }
+    }
+
+    // Fetch and load sectors and indicators
+    await fetchAndPopulateSetores();
     await fetchAndRenderAdminList();
 
     // File input label helper (displays selected file name)
@@ -985,7 +1014,18 @@ async function initAdminPage() {
     function populateFormForEdit(item) {
         idInput.value = item.id;
         tituloInput.value = item.titulo;
-        if (tagInput) tagInput.value = item.tag || '';
+        if (tagInput) {
+            // Check if item.tag exists in dropdown options; if not, dynamically add it to prevent data loss
+            const itemTag = item.tag || '';
+            let exists = Array.from(tagInput.options).some(opt => opt.value === itemTag);
+            if (!exists && itemTag) {
+                const opt = document.createElement('option');
+                opt.value = itemTag;
+                opt.textContent = itemTag;
+                tagInput.appendChild(opt);
+            }
+            tagInput.value = itemTag;
+        }
         descricaoInput.value = item.descricao;
         linkInput.value = item.url_powerbi;
 
@@ -1033,6 +1073,7 @@ async function initAdminPage() {
     function resetAdminForm() {
         form.reset();
         idInput.value = '';
+        if (tagInput) tagInput.selectedIndex = 0;
         document.querySelector('.file-upload-label span').textContent = 'Escolher arquivo de imagem...';
         btnCancelar.style.display = 'none';
 
@@ -1041,6 +1082,247 @@ async function initAdminPage() {
         btnSalvar.style.backgroundColor = '';
         btnSalvar.style.backgroundImage = '';
         btnSalvar.style.boxShadow = '';
+    }
+
+    // ==========================================================================
+    // 3.5 SECTOR MODAL LOGIC (CRUD para Setores / Comissões)
+    // ==========================================================================
+    const btnOpenSetoresModal = document.getElementById('btn-open-setores-modal');
+    const btnCloseSetoresModal = document.getElementById('btn-close-setores-modal');
+    const modalSetores = document.getElementById('modal-setores');
+    const formSetorModal = document.getElementById('form-setor-modal');
+    const setorIdInput = document.getElementById('setor-id');
+    const setorAntigoNomeInput = document.getElementById('setor-antigo-nome');
+    const setorNomeInput = document.getElementById('setor-nome-input');
+    const btnSalvarSetorModal = document.getElementById('btn-salvar-setor-modal');
+    const btnCancelarSetorModal = document.getElementById('btn-cancelar-setor-modal');
+    const listaSetoresModal = document.getElementById('lista-setores-modal');
+    const modalSetoresAlert = document.getElementById('modal-setores-alert');
+    const modalSetoresSuccess = document.getElementById('modal-setores-success');
+
+    // Abre o modal de setores
+    if (btnOpenSetoresModal && modalSetores) {
+        btnOpenSetoresModal.addEventListener('click', async () => {
+            resetSectorModalForm();
+            modalSetores.style.display = 'flex';
+            await fetchAndRenderModalSectors();
+            setorNomeInput && setorNomeInput.focus();
+        });
+    }
+
+    // Fecha o modal ao clicar no botão X ou fora do card
+    if (btnCloseSetoresModal && modalSetores) {
+        btnCloseSetoresModal.addEventListener('click', () => {
+            modalSetores.style.display = 'none';
+        });
+        modalSetores.addEventListener('click', (e) => {
+            if (e.target === modalSetores) {
+                modalSetores.style.display = 'none';
+            }
+        });
+    }
+
+    // Cancelar edição de setor no modal
+    if (btnCancelarSetorModal) {
+        btnCancelarSetorModal.addEventListener('click', () => {
+            resetSectorModalForm();
+        });
+    }
+
+    // Submissão do formulário do modal (Cadastrar / Editar Setor)
+    if (formSetorModal) {
+        formSetorModal.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (modalSetoresAlert) modalSetoresAlert.style.display = 'none';
+            if (modalSetoresSuccess) modalSetoresSuccess.style.display = 'none';
+
+            const id = setorIdInput ? setorIdInput.value.trim() : '';
+            const antigoNome = setorAntigoNomeInput ? setorAntigoNomeInput.value.trim() : '';
+            const novoNome = setorNomeInput ? setorNomeInput.value.trim() : '';
+
+            if (!novoNome) return;
+
+            const originalBtnHTML = btnSalvarSetorModal.innerHTML;
+            btnSalvarSetorModal.disabled = true;
+            btnSalvarSetorModal.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+            try {
+                if (id) {
+                    // MODO EDIÇÃO: Atualiza na tabela 'setores'
+                    const { error: updateErr } = await supabaseClient
+                        .from('setores')
+                        .update({ nome: novoNome })
+                        .eq('id', id);
+
+                    if (updateErr) throw updateErr;
+
+                    // Atualiza também os indicadores vinculados ao antigo nome para manter integridade
+                    if (antigoNome && antigoNome !== novoNome) {
+                        const { error: indUpdateErr } = await supabaseClient
+                            .from('indicadores')
+                            .update({ tag: novoNome })
+                            .eq('tag', antigoNome);
+
+                        if (indUpdateErr) {
+                            console.warn('Erro ao sincronizar tag nos indicadores:', indUpdateErr);
+                        }
+                    }
+
+                    showModalSuccess(`Setor alterado para "${escapeHtml(novoNome)}" com sucesso!`);
+                } else {
+                    // MODO INSERÇÃO: Adiciona novo setor
+                    const { error: insertErr } = await supabaseClient
+                        .from('setores')
+                        .insert([{ nome: novoNome }]);
+
+                    if (insertErr) throw insertErr;
+
+                    showModalSuccess(`Setor "${escapeHtml(novoNome)}" cadastrado com sucesso!`);
+                }
+
+                resetSectorModalForm();
+                await fetchAndRenderModalSectors();
+                // Recarrega o dropdown principal do formulário e a lista de indicadores
+                await fetchAndPopulateSetores();
+                await fetchAndRenderAdminList();
+
+            } catch (err) {
+                console.error('Erro ao salvar setor no modal:', err);
+                let msg = err.message || 'Falha ao salvar setor.';
+                if (msg.includes('duplicate key') || msg.includes('unique constraint') || msg.includes('already exists')) {
+                    msg = 'Este setor já está cadastrado no sistema.';
+                }
+                showModalError(msg);
+            } finally {
+                btnSalvarSetorModal.disabled = false;
+                btnSalvarSetorModal.innerHTML = originalBtnHTML;
+            }
+        });
+    }
+
+    // Busca e renderiza a lista de setores no modal
+    async function fetchAndRenderModalSectors() {
+        if (!listaSetoresModal) return;
+
+        listaSetoresModal.innerHTML = `
+            <li style="text-align: center; color: #64748b; padding: 1rem 0;">
+                <i class="fa-solid fa-spinner fa-spin"></i> Carregando setores...
+            </li>
+        `;
+
+        try {
+            const { data: setores, error } = await supabaseClient
+                .from('setores')
+                .select('*')
+                .order('nome', { ascending: true });
+
+            if (error) throw error;
+
+            if (!setores || setores.length === 0) {
+                listaSetoresModal.innerHTML = `
+                    <li style="text-align: center; color: #64748b; padding: 1rem 0; font-size: 0.875rem;">
+                        Nenhum setor cadastrado. Digite um nome acima para adicionar.
+                    </li>
+                `;
+                return;
+            }
+
+            listaSetoresModal.innerHTML = '';
+            setores.forEach(setor => {
+                const li = document.createElement('li');
+                li.className = 'sector-item';
+
+                li.innerHTML = `
+                    <span class="sector-item-name">${escapeHtml(setor.nome)}</span>
+                    <div class="sector-item-actions">
+                        <button type="button" class="btn-sector-action btn-sector-edit" data-id="${setor.id}" data-nome="${escapeHtml(setor.nome)}" title="Editar setor">
+                            <i class="fa-solid fa-pencil"></i>
+                            <span>Editar</span>
+                        </button>
+                        <button type="button" class="btn-sector-action btn-sector-delete" data-id="${setor.id}" data-nome="${escapeHtml(setor.nome)}" title="Excluir setor">
+                            <i class="fa-solid fa-trash-can"></i>
+                            <span>Excluir</span>
+                        </button>
+                    </div>
+                `;
+
+                // Evento Editar Setor
+                li.querySelector('.btn-sector-edit').addEventListener('click', () => {
+                    if (setorIdInput) setorIdInput.value = setor.id;
+                    if (setorAntigoNomeInput) setorAntigoNomeInput.value = setor.nome;
+                    if (setorNomeInput) setorNomeInput.value = setor.nome;
+
+                    if (btnCancelarSetorModal) btnCancelarSetorModal.style.display = 'inline-flex';
+                    if (btnSalvarSetorModal) {
+                        btnSalvarSetorModal.innerHTML = '<i class="fa-solid fa-check"></i> <span>Salvar</span>';
+                    }
+                    setorNomeInput && setorNomeInput.focus();
+                });
+
+                // Evento Excluir Setor
+                li.querySelector('.btn-sector-delete').addEventListener('click', async () => {
+                    if (!confirm(`Deseja realmente excluir o setor "${setor.nome}"?`)) return;
+
+                    try {
+                        const { error: deleteErr } = await supabaseClient
+                            .from('setores')
+                            .delete()
+                            .eq('id', setor.id);
+
+                        if (deleteErr) throw deleteErr;
+
+                        showModalSuccess(`Setor "${escapeHtml(setor.nome)}" excluído com sucesso.`);
+                        resetSectorModalForm();
+                        await fetchAndRenderModalSectors();
+                        await fetchAndPopulateSetores();
+                        await fetchAndRenderAdminList();
+                    } catch (err) {
+                        console.error('Erro ao excluir setor:', err);
+                        showModalError('Falha ao excluir setor: ' + err.message);
+                    }
+                });
+
+                listaSetoresModal.appendChild(li);
+            });
+
+        } catch (err) {
+            console.error('Erro ao listar setores no modal:', err);
+            listaSetoresModal.innerHTML = `
+                <li style="text-align: center; color: #ef4444; padding: 1rem 0; font-size: 0.875rem;">
+                    Erro ao carregar setores: ${escapeHtml(err.message)}
+                </li>
+            `;
+        }
+    }
+
+    // Reseta o formulário do modal
+    function resetSectorModalForm() {
+        if (formSetorModal) formSetorModal.reset();
+        if (setorIdInput) setorIdInput.value = '';
+        if (setorAntigoNomeInput) setorAntigoNomeInput.value = '';
+        if (btnCancelarSetorModal) btnCancelarSetorModal.style.display = 'none';
+        if (btnSalvarSetorModal) {
+            btnSalvarSetorModal.innerHTML = '<i class="fa-solid fa-plus"></i> <span>Adicionar</span>';
+        }
+    }
+
+    // Exibe mensagem de erro no modal
+    function showModalError(msg) {
+        if (modalSetoresAlert) {
+            modalSetoresAlert.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${escapeHtml(msg)}`;
+            modalSetoresAlert.style.display = 'block';
+        }
+        if (modalSetoresSuccess) modalSetoresSuccess.style.display = 'none';
+    }
+
+    // Exibe mensagem de sucesso no modal
+    function showModalSuccess(msg) {
+        if (modalSetoresSuccess) {
+            modalSetoresSuccess.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${msg}`;
+            modalSetoresSuccess.style.display = 'flex';
+        }
+        if (modalSetoresAlert) modalSetoresAlert.style.display = 'none';
     }
 }
 

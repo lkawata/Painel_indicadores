@@ -80,7 +80,12 @@
                             </div>
 
                             <div class="form-group-admin">
-                                <label for="tag-indicador"><i class="fa-solid fa-layer-group"></i> Setor / Comissão</label>
+                                <div class="form-label-with-action">
+                                    <label for="tag-indicador" style="margin-bottom: 0;">Setor / Comissão</label>
+                                    <button type="button" class="btn-manage-sectors" id="btn-open-setores-modal">
+                                        <i class="fa-solid fa-gear"></i> Gerenciar Setores
+                                    </button>
+                                </div>
                                 <select id="tag-indicador" class="select-admin" required>
                                     <option value="" disabled selected>Carregando setores...</option>
                                 </select>
@@ -241,6 +246,51 @@
     <footer class="main-footer">
         <p>&copy; 2026 AME Praia Grande. Painel de Controle Administrativo.</p>
     </footer>
+
+    <!-- MODAL DE GERENCIAMENTO DE SETORES -->
+    <div id="modal-setores" class="modal-overlay" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <h2>Gerenciar Setores / Comissões</h2>
+                </div>
+                <button type="button" class="modal-close" id="btn-close-setores-modal" title="Fechar modal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Alert de Feedback do Modal -->
+                <div id="modal-setores-alert" class="error-alert" style="display: none;"></div>
+                <div id="modal-setores-success" class="success-alert" style="display: none;"></div>
+
+                <!-- Form para adicionar/editar setor -->
+                <form id="form-setor-modal" class="modal-sector-form">
+                    <input type="hidden" id="setor-id" value="">
+                    <input type="hidden" id="setor-antigo-nome" value="">
+                    <div class="form-group-admin" style="margin-bottom: 0; flex: 1;">
+                        <input type="text" id="setor-nome-input" placeholder="Novo nome do setor (ex: Qualidade, Recepção...)" required autocomplete="off">
+                    </div>
+                    <button type="submit" id="btn-salvar-setor-modal" class="btn-primary-admin" style="margin: 0; padding: 0.75rem 1.125rem;">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Adicionar</span>
+                    </button>
+                    <button type="button" id="btn-cancelar-setor-modal" class="btn-secondary-admin" style="display: none; margin: 0; padding: 0.75rem 1rem;">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </form>
+
+                <!-- Lista de setores cadastrados -->
+                <div class="sectors-list-container">
+                    <h3 class="sectors-list-title">Setores Cadastrados no Banco</h3>
+                    <ul id="lista-setores-modal" class="sectors-list">
+                        <!-- Renderizado dinamicamente via app.js -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
 
 </body>
 
