@@ -902,7 +902,7 @@ async function initAdminPage() {
     async function fetchAndRenderAdminList() {
         listTableBody.innerHTML = `
             <tr>
-                <td colspan="3" style="text-align: center; padding: 2rem; color: #64748b;">
+                <td colspan="4" style="text-align: center; padding: 2rem; color: #64748b;">
                     <i class="fa-solid fa-spinner fa-spin"></i> Carregando registros...
                 </td>
             </tr>
@@ -921,7 +921,7 @@ async function initAdminPage() {
             if (indicatorsCache.length === 0) {
                 listTableBody.innerHTML = `
                     <tr>
-                        <td colspan="3" style="text-align: center; padding: 2rem; color: #64748b;">
+                        <td colspan="4" style="text-align: center; padding: 2rem; color: #64748b;">
                             Nenhum indicador cadastrado.
                         </td>
                     </tr>
@@ -934,6 +934,7 @@ async function initAdminPage() {
                 const tr = document.createElement('tr');
 
                 const thumbUrl = item.url_imagem || 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=100&auto=format&fit=crop&q=80';
+                const itemTag = item.tag || 'Indicador';
 
                 tr.innerHTML = `
                     <td>
@@ -943,6 +944,9 @@ async function initAdminPage() {
                     </td>
                     <td>
                         <div class="table-indicator-title">${escapeHtml(item.titulo)}</div>
+                    </td>
+                    <td>
+                        <span class="card-tag">${escapeHtml(itemTag)}</span>
                     </td>
                     <td>
                         <div class="table-actions">
@@ -969,7 +973,7 @@ async function initAdminPage() {
             console.error('Erro ao listar indicadores na administração:', error);
             listTableBody.innerHTML = `
                 <tr>
-                    <td colspan="3" style="text-align: center; color: #ef4444; padding: 2rem;">
+                    <td colspan="4" style="text-align: center; color: #ef4444; padding: 2rem;">
                         Erro ao carregar lista de indicadores: ${escapeHtml(error.message)}
                     </td>
                 </tr>
