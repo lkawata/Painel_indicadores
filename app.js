@@ -228,6 +228,9 @@ async function initIndexPage() {
             gridContainer.appendChild(card);
         });
 
+        // --- Atualiza os mini-cards de KPI ---
+        updateKpiCards(indicadores);
+
     } catch (error) {
         console.error('Erro ao buscar indicadores:', error);
         gridContainer.innerHTML = `
@@ -237,6 +240,59 @@ async function initIndexPage() {
                 <small>${escapeHtml(error.message)}</small>
             </div>
         `;
+    }
+}
+
+// ==========================================================================
+// 1.1 KPI MINI-CARDS — Atualização dinâmica dos valores
+// ==========================================================================
+function updateKpiCards(indicadores) {
+    // --- Card 1: Total de Indicadores ---
+    const elTotal = document.getElementById('kpi-total-indicadores');
+    if (elTotal) {
+        elTotal.textContent = indicadores.length;
+    }
+
+    // --- Card 2: Setores Ativos (tags únicas, excluindo fallback) ---
+    const elSetores = document.getElementById('kpi-setores-ativos');
+    if (elSetores) {
+        const uniqueTags = new Set(
+            indicadores
+                .map(i => (i.tag || '').trim())
+                .filter(tag => tag.length > 0)
+        );
+        elSetores.textContent = uniqueTags.size;
+    }
+
+    // --- Card 3: Última Atualização (indicador com created_at mais recente) ---
+    const elData = document.getElementById('kpi-ultima-atualizacao');
+    const elSub = document.getElementById('kpi-ultima-atualizacao-sub');
+    if (elData && elSub) {
+        // Ordena decrescente por created_at e pega o primeiro
+        const sorted = [...indicadores].sort((a, b) => {
+            return new Date(b.created_at) - new Date(a.created_at);
+        });
+
+        if (sorted.length > 0) {
+            const latest = sorted[0];
+            const date = new Date(latest.created_at);
+
+            // Formata como "Jul 2026" em pt-BR
+            const monthYear = date.toLocaleDateString('pt-BR', {
+                month: 'short',
+                year: 'numeric'
+            });
+            // Capitaliza a primeira letra do mês
+            elData.textContent = monthYear.charAt(0).toUpperCase() + monthYear.slice(1);
+
+            // Subtexto: nome do indicador mais recente (truncado)
+            const titulo = latest.titulo || 'Indicador mais recente';
+            elSub.textContent = titulo.length > 28 ? titulo.substring(0, 26) + '…' : titulo;
+            elSub.title = titulo; // tooltip com nome completo
+        } else {
+            elData.textContent = '—';
+            elSub.textContent = 'Sem dados';
+        }
     }
 }
 
